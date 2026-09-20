@@ -19,6 +19,8 @@
       --light: #94a3b8;
       --timeline-w: 56px;
       --px-per-min: 1.35;
+      --now-line: rgba(239, 68, 68, 0.7);
+      --now-dot: #ef4444;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -105,6 +107,7 @@
       border-radius: 16px;
       overflow: hidden;
       box-shadow: 0 1px 3px rgba(15,23,42,0.05), 0 6px 20px rgba(15,23,42,0.04);
+      position: relative;
     }
 
     .timeline {
@@ -113,6 +116,7 @@
       position: relative;
       background: #f8fafc;
       border-right: 1px solid var(--border);
+      z-index: 3;
     }
     .timeline-header {
       height: 42px;
@@ -164,6 +168,7 @@
       display: flex;
       flex: 1;
       min-width: 0;
+      position: relative;
     }
     .day {
       flex: 1;
@@ -171,8 +176,17 @@
       border-right: 1px solid var(--border);
       display: flex;
       flex-direction: column;
+      position: relative;
     }
     .day:last-child { border-right: none; }
+
+    .day.today .day-header {
+      background: #1e3a5f;
+      box-shadow: inset 0 -2px 0 var(--accent);
+    }
+    .day.today .day-body {
+      background: rgba(59, 130, 246, 0.03);
+    }
 
     .day-header {
       height: 42px;
@@ -186,6 +200,8 @@
       letter-spacing: -0.01em;
       border-bottom: 1px solid rgba(255,255,255,0.08);
       flex-shrink: 0;
+      position: relative;
+      z-index: 2;
     }
 
     .day-body {
@@ -266,6 +282,71 @@
     .lesson.compact .teacher { font-size: 0.64rem; }
     .lesson.compact .time { font-size: 0.6rem; }
 
+    /* ── Current time line ── */
+    .now-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 0;
+      z-index: 10;
+      pointer-events: none;
+    }
+    .now-line::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 2px;
+      background: var(--now-line);
+      box-shadow: 0 0 6px rgba(239, 68, 68, 0.35);
+    }
+    .now-line .now-dot {
+      position: absolute;
+      left: -5px;
+      top: -4px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--now-dot);
+      border: 2px solid #fff;
+      box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.25);
+    }
+    .now-line .now-label {
+      position: absolute;
+      left: 12px;
+      top: -9px;
+      font-size: 0.62rem;
+      font-weight: 700;
+      color: #ef4444;
+      background: rgba(255, 255, 255, 0.92);
+      padding: 1px 5px;
+      border-radius: 4px;
+      white-space: nowrap;
+      letter-spacing: 0.02em;
+    }
+
+    /* Timeline-side now indicator */
+    .now-tick {
+      position: absolute;
+      left: 0;
+      right: 0;
+      z-index: 4;
+      pointer-events: none;
+    }
+    .now-tick .now-label-tl {
+      position: absolute;
+      right: 4px;
+      top: -8px;
+      font-size: 0.62rem;
+      font-weight: 800;
+      color: #ef4444;
+      background: #fef2f2;
+      padding: 1px 4px;
+      border-radius: 3px;
+      border: 1px solid #fecaca;
+    }
+
     .legend {
       margin-top: 1.25rem;
       display: flex;
@@ -331,8 +412,7 @@
       <span>💡</span>
       <span>
         Edytuj obiekt <code>SCHEDULE</code> w <code>&lt;script&gt;</code>.
-        Bloki mają wysokość proporcjonalną do czasu trwania, przerwy pojawiają się automatycznie jako puste przestrzenie.
-        Oś czasu po lewej – co 30 min.
+        Bloki proporcjonalne do czasu · oś 30 min · czerwona linia = aktualna godzina (tylko w dni robocze, w godzinach planu).
       </span>
     </div>
 
@@ -341,14 +421,12 @@
   </div>
 
   <footer class="footer">
-    Plan lekcji klasy 1a · bloki proporcjonalne do czasu · oś 30 min
+    Plan lekcji klasy 1a · bloki proporcjonalne do czasu · oś 30 min · linia „teraz”
   </footer>
 
   <script>
     /* ============================================================
        SCHEDULE – edytuj tutaj, aby dodać / zmienić lekcje
-       ============================================================
-       time: "HH:MM–HH:MM"
        ============================================================ */
 
     const SCHEDULE = {
@@ -429,6 +507,15 @@
       { label: "Religia",                   color: "#6366f1" },
     ];
 
+    /* JS day index → Polish day name (0=Sun … 6=Sat) */
+    const DAY_NAMES = {
+      1: "Poniedziałek",
+      2: "Wtorek",
+      3: "Środa",
+      4: "Czwartek",
+      5: "Piątek",
+    };
+
     function parseTime(str) {
       const parts = str.split(/[–-]/).map(s => s.trim());
       const [sh, sm] = parts[0].split(":").map(Number);
@@ -461,6 +548,23 @@
 
     const TOTAL_MIN = globalEnd - globalStart;
 
+    function getNowInfo() {
+      const now = new Date();
+      const day = now.getDay(); // 0=Sun … 6=Sat
+      const mins = now.getHours() * 60 + now.getMinutes();
+      const isWeekday = day >= 1 && day <= 5;
+      const inRange = mins >= globalStart && mins <= globalEnd;
+      return {
+        day,
+        dayName: DAY_NAMES[day] || null,
+        mins,
+        isWeekday,
+        inRange,
+        showLine: isWeekday && inRange,
+        label: formatHHMM(mins),
+      };
+    }
+
     function render() {
       const pxPerMin = parseFloat(
         getComputedStyle(document.documentElement).getPropertyValue("--px-per-min")
@@ -469,6 +573,8 @@
       const bodyHeight = TOTAL_MIN * pxPerMin;
       const wrap = document.getElementById("schedule");
       wrap.innerHTML = "";
+
+      const nowInfo = getNowInfo();
 
       // Timeline
       const timeline = document.createElement("div");
@@ -486,6 +592,17 @@
         tick.innerHTML = '<span class="label">' + formatHHMM(m) + '</span>';
         timelineBody.appendChild(tick);
       }
+
+      // Now marker on timeline
+      if (nowInfo.showLine) {
+        const nowTop = (nowInfo.mins - globalStart) * pxPerMin;
+        const nowTick = document.createElement("div");
+        nowTick.className = "now-tick";
+        nowTick.style.top = nowTop + "px";
+        nowTick.innerHTML = '<span class="now-label-tl">' + nowInfo.label + '</span>';
+        timelineBody.appendChild(nowTick);
+      }
+
       timeline.appendChild(timelineBody);
       wrap.appendChild(timeline);
 
@@ -496,6 +613,9 @@
       Object.keys(SCHEDULE).forEach(dayName => {
         const day = document.createElement("div");
         day.className = "day";
+        if (nowInfo.isWeekday && nowInfo.dayName === dayName) {
+          day.classList.add("today");
+        }
 
         const header = document.createElement("div");
         header.className = "day-header";
@@ -545,6 +665,19 @@
           body.appendChild(card);
         });
 
+        // Current-time line inside each day body (spans full width of column)
+        if (nowInfo.showLine) {
+          const nowTop = (nowInfo.mins - globalStart) * pxPerMin;
+          const line = document.createElement("div");
+          line.className = "now-line";
+          line.style.top = nowTop + "px";
+          // Only put the dot + label on the first day column
+          if (dayName === Object.keys(SCHEDULE)[0]) {
+            line.innerHTML = '<span class="now-dot"></span><span class="now-label">teraz ' + nowInfo.label + '</span>';
+          }
+          body.appendChild(line);
+        }
+
         day.appendChild(body);
         daysEl.appendChild(day);
       });
@@ -557,6 +690,9 @@
     }
 
     render();
+
+    // Refresh the "now" line every 30 seconds
+    setInterval(render, 30000);
 
     var resizeTimer;
     window.addEventListener("resize", function() {
