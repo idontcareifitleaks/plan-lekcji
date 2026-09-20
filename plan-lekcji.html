@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Plan lekcji · Klasa 1a</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f1f5f9;
+      --header: #0f172a;
+      --accent: #3b82f6;
+      --card: #ffffff;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --muted: #64748b;
+      --light: #94a3b8;
+      --timeline-w: 56px;
+      --px-per-min: 1.35;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.35;
+    }
+
+    .header {
+      background: var(--header);
+      color: #fff;
+      padding: 1.25rem 1.5rem 1.35rem;
+      position: relative;
+    }
+    .header::after {
+      content: '';
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      height: 3px;
+      background: var(--accent);
+    }
+    .header-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .header h1 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+    .header .subtitle {
+      color: #94a3b8;
+      font-size: 0.85rem;
+      margin-top: 0.2rem;
+      font-weight: 500;
+    }
+    .header-right {
+      text-align: right;
+      color: #cbd5e1;
+      font-size: 0.8rem;
+    }
+    .header-right .label { color: #64748b; font-size: 0.72rem; }
+
+    .edit-hint {
+      max-width: 1280px;
+      margin: 1rem auto 0;
+      padding: 0.65rem 1.1rem;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 10px;
+      font-size: 0.78rem;
+      color: #1e40af;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+    .edit-hint code {
+      background: #dbeafe;
+      padding: 0.08rem 0.3rem;
+      border-radius: 4px;
+      font-size: 0.74rem;
+    }
+
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 1.1rem 1rem 2rem;
+    }
+
+    .schedule-wrap {
+      display: flex;
+      gap: 0;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(15,23,42,0.05), 0 6px 20px rgba(15,23,42,0.04);
+    }
+
+    .timeline {
+      width: var(--timeline-w);
+      flex-shrink: 0;
+      position: relative;
+      background: #f8fafc;
+      border-right: 1px solid var(--border);
+    }
+    .timeline-header {
+      height: 42px;
+      border-bottom: 1px solid var(--border);
+      background: var(--header);
+    }
+    .timeline-body {
+      position: relative;
+    }
+    .tick {
+      position: absolute;
+      left: 0;
+      right: 0;
+      display: flex;
+      align-items: flex-start;
+      pointer-events: none;
+    }
+    .tick .label {
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: var(--muted);
+      width: 100%;
+      text-align: center;
+      transform: translateY(-50%);
+      background: #f8fafc;
+      padding: 0 2px;
+      line-height: 1;
+    }
+    .tick.major .label {
+      color: var(--text);
+      font-weight: 700;
+      font-size: 0.72rem;
+    }
+    .tick::after {
+      content: '';
+      position: absolute;
+      left: 100%;
+      top: 0;
+      width: 6px;
+      height: 1px;
+      background: #cbd5e1;
+    }
+    .tick.major::after {
+      width: 10px;
+      background: #94a3b8;
+    }
+
+    .days {
+      display: flex;
+      flex: 1;
+      min-width: 0;
+    }
+    .day {
+      flex: 1;
+      min-width: 0;
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+    }
+    .day:last-child { border-right: none; }
+
+    .day-header {
+      height: 42px;
+      background: var(--header);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.88rem;
+      letter-spacing: -0.01em;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      flex-shrink: 0;
+    }
+
+    .day-body {
+      position: relative;
+      flex: 1;
+    }
+
+    .guide {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: #e2e8f0;
+      pointer-events: none;
+    }
+    .guide.major {
+      background: #cbd5e1;
+    }
+
+    .lesson {
+      position: absolute;
+      left: 5px;
+      right: 5px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 6px 8px 6px 10px;
+      overflow: hidden;
+      box-shadow: 0 1px 2px rgba(15,23,42,0.05);
+      transition: box-shadow 0.15s ease, transform 0.15s ease;
+      z-index: 2;
+    }
+    .lesson:hover {
+      box-shadow: 0 4px 14px rgba(15,23,42,0.12);
+      transform: translateY(-1px);
+      z-index: 5;
+    }
+    .lesson::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3.5px;
+      background: var(--color, var(--accent));
+      border-radius: 3px 0 0 3px;
+    }
+
+    .lesson .time {
+      font-size: 0.65rem;
+      color: var(--muted);
+      font-weight: 500;
+      margin-bottom: 1px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .lesson .subject {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.25;
+      margin-bottom: 1px;
+    }
+    .lesson .teacher {
+      font-size: 0.68rem;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .lesson .extra {
+      font-size: 0.62rem;
+      color: var(--color, var(--accent));
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .lesson.compact .subject { font-size: 0.72rem; }
+    .lesson.compact .teacher { font-size: 0.64rem; }
+    .lesson.compact .time { font-size: 0.6rem; }
+
+    .legend {
+      margin-top: 1.25rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem 1.2rem;
+      justify-content: center;
+      padding: 0.85rem 1rem;
+      background: var(--card);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.74rem;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .legend-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 0.9rem;
+      font-size: 0.72rem;
+      color: var(--light);
+    }
+
+    @media (max-width: 900px) {
+      :root { --px-per-min: 1.15; --timeline-w: 48px; }
+      .day-header { font-size: 0.78rem; }
+      .lesson .subject { font-size: 0.72rem; }
+    }
+    @media (max-width: 640px) {
+      .schedule-wrap { overflow-x: auto; }
+      .days { min-width: 640px; }
+      .timeline { position: sticky; left: 0; z-index: 10; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <div>
+        <h1>Plan lekcji</h1>
+        <p class="subtitle">Klasa 1a · Edukacja wczesnoszkolna</p>
+      </div>
+      <div class="header-right">
+        <div class="label">Szkoła Podstawowa</div>
+        <div>Tydzień lekcyjny</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="edit-hint">
+      <span>💡</span>
+      <span>
+        Edytuj obiekt <code>SCHEDULE</code> w <code>&lt;script&gt;</code>.
+        Bloki mają wysokość proporcjonalną do czasu trwania, przerwy pojawiają się automatycznie jako puste przestrzenie.
+        Oś czasu po lewej – co 30 min.
+      </span>
+    </div>
+
+    <div class="schedule-wrap" id="schedule"></div>
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <footer class="footer">
+    Plan lekcji klasy 1a · bloki proporcjonalne do czasu · oś 30 min
+  </footer>
+
+  <script>
+    /* ============================================================
+       SCHEDULE – edytuj tutaj, aby dodać / zmienić lekcje
+       ============================================================
+       time: "HH:MM–HH:MM"
+       ============================================================ */
+
+    const SCHEDULE = {
+      "Poniedziałek": [
+        { time: "08:00–08:45", nr: "1", subject: "Edukacja wczesnoszkolna", teacher: "Ewelina Słojewska-Dobrzyńska" },
+        { time: "08:55–09:40", nr: "2", subject: "Edukacja wczesnoszkolna", teacher: "Ewelina Słojewska-Dobrzyńska" },
+        { time: "09:50–10:35", nr: "3", subject: "Edukacja wczesnoszkolna", teacher: "Ewelina Słojewska-Dobrzyńska" },
+        { time: "10:45–11:30", nr: "4", subject: "e_język angielski",       teacher: "Bożena Fastyn" },
+		{ time: "11:30–12:30", nr: "-", subject: "Terapia pedagogiczna",       teacher: "Iwona Glizia" },
+		{ time: "13:45–14:45", nr: "-", subject: "Projektowanie i Druk 3D",       teacher: "Edu3dkacja" },
+      ],
+      "Wtorek": [
+        { time: "08:00–08:45", nr: "1", subject: "Edukacja wczesnoszkolna", teacher: "Ewelina Słojewska-Dobrzyńska" },
+        { time: "08:55–09:40", nr: "2", subject: "Edukacja wczesnoszkolna", teacher: "Ewelina Słojewska-Dobrzyńska" },
+        { time: "09:50–10:35", nr: "3", subject: "Informatyka",             teacher: "Małgorzata Zawadzka" },
+        { time: "10:45–11:30", nr: "4", subject: "Edukacja wczesnoszkolna", teacher: "Ewelina Słojewska-Dobrzyńska" },
+        { time: "11:45–12:30", nr: "5", subject: "Edukacja wczesnoszkolna", teacher: "Ewelina Słojewska-Dobrzyńska" },
+		{ time: "12:40–13:40", nr: "-", subject: "TUS", teacher: "Aleksandra Boronowicz-Niewola" },
+      ],
+      "Środa": [
+        { time: "08:00–08:45", nr: "1", subject: "Edukacja wczesnoszkolna",              teacher: "Ewelina Słojewska-Dobrzyńska" },
+        { time: "08:55–09:40", nr: "2", subject: "Wychowanie fizyczne",                  teacher: "Ewelina Słojewska-Dobrzyńska" },
+        { time: "09:50–10:35", nr: "3", subject: "Edukacja wczesnoszkolna",              teacher: "Ewelina Słojewska-Dobrzyńska" },
+        { time: "10:45–11:30", nr: "4", subject: "Zajęcia rozwijające zainteresowania",  teacher: "Ewelina Słojewska-Dobrzyńska", extra: "Sala 3 · Koło plastyczne" },
+        { time: "11:30–12:30", nr: "—", subject: "Zaj. rew. log 1a (B.M, O.J.)",         teacher: "Jedynak Beata" },
+      ],
+      "Czwartek": [
+        { time: "08:00–08:45", nr: "1", subject: "Wychowanie fizyczne",     teacher: "Ewelina Słojewska-Dobrzyńska" },
+        { time: "08:55–09:40", nr: "2", subject: "Edukacja wczesnoszkolna", teacher: "Ewelina Słojewska-Dobrzyńska" },
+        { time: "09:50–10:35", nr: "3", subject: "Edukacja wczesnoszkolna", teacher: "Ewelina Słojewska-Dobrzyńska" },
+        { time: "10:45–11:30", nr: "4", subject: "Edukacja wczesnoszkolna", teacher: "Ewelina Słojewska-Dobrzyńska" },
+        { time: "11:45–12:30", nr: "5", subject: "Edukacja wczesnoszkolna", teacher: "Ewelina Słojewska-Dobrzyńska" },
+      ],
+      "Piątek": [
+        { time: "08:00–08:45", nr: "1", subject: "Edukacja wczesnoszkolna", teacher: "Ewelina Słojewska-Dobrzyńska" },
+        { time: "08:55–09:40", nr: "2", subject: "Edukacja wczesnoszkolna", teacher: "Ewelina Słojewska-Dobrzyńska" },
+        { time: "09:50–10:35", nr: "3", subject: "e_język angielski",       teacher: "Bożena Fastyn" },
+        { time: "10:45–11:30", nr: "4", subject: "Wychowanie fizyczne",     teacher: "Ewelina Słojewska-Dobrzyńska" },
+        { time: "11:45–12:30", nr: "5", subject: "Religia",                 teacher: "Beata Jedynak" },
+      ],
+    };
+
+    const SUBJECT_COLORS = {
+      "Edukacja wczesnoszkolna":             "#3b82f6",
+      "e_język angielski":                   "#8b5cf6",
+      "Informatyka":                         "#06b6d4",
+      "Wychowanie fizyczne":                 "#10b981",
+      "Zajęcia rozwijające zainteresowania": "#f59e0b",
+      "koło plastyczne":                     "#f59e0b",
+      "Zaj. rew. log 1a (B.M, O.J.)":        "#ec4899",
+      "Religia":                             "#6366f1",
+    };
+
+    const SUBJECT_SHORT = {
+      "Edukacja wczesnoszkolna":             "Edukacja wczesnoszkolna",
+      "e_język angielski":                   "Język angielski",
+      "Informatyka":                         "Informatyka",
+      "Wychowanie fizyczne":                 "Wychowanie fizyczne",
+      "Zajęcia rozwijające zainteresowania": "Koło plastyczne",
+      "Zaj. rew. log 1a (B.M, O.J.)":        "Zaj. rewalidacyjne log.",
+      "Religia":                             "Religia",
+    };
+
+    const TEACHER_SHORT = {
+      "Ewelina Słojewska-Dobrzyńska": "E. Słojewska-Dobrzyńska",
+      "Bożena Fastyn":                "B. Fastyn",
+      "Małgorzata Zawadzka":          "M. Zawadzka",
+      "Jedynak Beata":                "B. Jedynak",
+      "Beata Jedynak":                "B. Jedynak",
+    };
+
+    const LEGEND = [
+      { label: "Edukacja wczesnoszkolna",   color: "#3b82f6" },
+      { label: "Język angielski",           color: "#8b5cf6" },
+      { label: "Informatyka",               color: "#06b6d4" },
+      { label: "Wychowanie fizyczne",       color: "#10b981" },
+      { label: "Koło / Zaj. rewalidacyjne", color: "#f59e0b" },
+      { label: "Religia",                   color: "#6366f1" },
+    ];
+
+    function parseTime(str) {
+      const parts = str.split(/[–-]/).map(s => s.trim());
+      const [sh, sm] = parts[0].split(":").map(Number);
+      const [eh, em] = parts[1].split(":").map(Number);
+      return {
+        startMin: sh * 60 + sm,
+        endMin:   eh * 60 + em,
+      };
+    }
+
+    function formatHHMM(totalMin) {
+      const h = Math.floor(totalMin / 60);
+      const m = totalMin % 60;
+      return String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0");
+    }
+
+    let globalStart = Infinity;
+    let globalEnd   = -Infinity;
+
+    Object.values(SCHEDULE).forEach(lessons => {
+      lessons.forEach(l => {
+        const t = parseTime(l.time);
+        if (t.startMin < globalStart) globalStart = t.startMin;
+        if (t.endMin   > globalEnd)   globalEnd   = t.endMin;
+      });
+    });
+
+    globalStart = Math.floor(globalStart / 30) * 30;
+    globalEnd   = Math.ceil(globalEnd / 30) * 30;
+
+    const TOTAL_MIN = globalEnd - globalStart;
+
+    function render() {
+      const pxPerMin = parseFloat(
+        getComputedStyle(document.documentElement).getPropertyValue("--px-per-min")
+      ) || 1.35;
+
+      const bodyHeight = TOTAL_MIN * pxPerMin;
+      const wrap = document.getElementById("schedule");
+      wrap.innerHTML = "";
+
+      // Timeline
+      const timeline = document.createElement("div");
+      timeline.className = "timeline";
+      timeline.innerHTML = '<div class="timeline-header"></div>';
+      const timelineBody = document.createElement("div");
+      timelineBody.className = "timeline-body";
+      timelineBody.style.height = bodyHeight + "px";
+
+      for (let m = globalStart; m <= globalEnd; m += 30) {
+        const top = (m - globalStart) * pxPerMin;
+        const tick = document.createElement("div");
+        tick.className = "tick" + (m % 60 === 0 ? " major" : "");
+        tick.style.top = top + "px";
+        tick.innerHTML = '<span class="label">' + formatHHMM(m) + '</span>';
+        timelineBody.appendChild(tick);
+      }
+      timeline.appendChild(timelineBody);
+      wrap.appendChild(timeline);
+
+      // Day columns
+      const daysEl = document.createElement("div");
+      daysEl.className = "days";
+
+      Object.keys(SCHEDULE).forEach(dayName => {
+        const day = document.createElement("div");
+        day.className = "day";
+
+        const header = document.createElement("div");
+        header.className = "day-header";
+        header.textContent = dayName;
+        day.appendChild(header);
+
+        const body = document.createElement("div");
+        body.className = "day-body";
+        body.style.height = bodyHeight + "px";
+
+        for (let m = globalStart; m <= globalEnd; m += 30) {
+          const top = (m - globalStart) * pxPerMin;
+          const guide = document.createElement("div");
+          guide.className = "guide" + (m % 60 === 0 ? " major" : "");
+          guide.style.top = top + "px";
+          body.appendChild(guide);
+        }
+
+        SCHEDULE[dayName].forEach(lesson => {
+          const t = parseTime(lesson.time);
+          const duration = t.endMin - t.startMin;
+          const top    = (t.startMin - globalStart) * pxPerMin;
+          const height = duration * pxPerMin;
+
+          const card = document.createElement("div");
+          card.className = "lesson" + (duration < 40 ? " compact" : "");
+          card.style.top    = top + "px";
+          card.style.height = Math.max(height - 2, 18) + "px";
+
+          const color = SUBJECT_COLORS[lesson.subject] || "#3b82f6";
+          card.style.setProperty("--color", color);
+
+          const timeLabel = lesson.nr && lesson.nr !== "—"
+            ? lesson.time + " · lekcja " + lesson.nr
+            : lesson.time;
+
+          const subject = SUBJECT_SHORT[lesson.subject] || lesson.subject;
+          const teacher = TEACHER_SHORT[lesson.teacher] || lesson.teacher;
+
+          let html = '<div class="time">' + timeLabel + '</div>';
+          html += '<div class="subject">' + subject + '</div>';
+          html += '<div class="teacher">' + teacher + '</div>';
+          if (lesson.extra) {
+            html += '<div class="extra">' + lesson.extra + '</div>';
+          }
+          card.innerHTML = html;
+          body.appendChild(card);
+        });
+
+        day.appendChild(body);
+        daysEl.appendChild(day);
+      });
+
+      wrap.appendChild(daysEl);
+
+      document.getElementById("legend").innerHTML = LEGEND.map(function(item) {
+        return '<div class="legend-item"><span class="legend-dot" style="background:' + item.color + '"></span>' + item.label + '</div>';
+      }).join("");
+    }
+
+    render();
+
+    var resizeTimer;
+    window.addEventListener("resize", function() {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(render, 120);
+    });
+  </script>
+</body>
+</html>
